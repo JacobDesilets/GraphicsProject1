@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+            <title>Lab 3</title>
+            <script type="text/javascript" src="Common/webgl-utils.js"></script>
+            <script type="text/javascript" src="Common/initShaders.js"></script>
+            <script type="text/javascript" src="Common/MV.js"></script>
+            <script type="text/javascript" src="project1.js"></script>
+            
+            <script type="x-shader/x-vertex" id="vertex-shader">
+                attribute vec4 myPosition;
+                attribute vec4 myColor;
+                varying vec4 vColor;
+                void main() {
+                    gl_Position = myPosition;
+                    vColor = myColor;
+                }
+                </script>
+            
+            <script type="x-shader/x-fragment" id="fragment-shader">
+                precision mediump float;
+                varying vec4 vColor;
+                void main() {
+                    gl_FragColor = vColor;
+                }
+            </script>
+    </head>
+    
+    <body onload = "init()" style="margin:0px; font-family: system-ui;">
+        <div style="display: flex; gap:1rem; padding: 1rem;">
+            <canvas id="gl-canvas" width="512" height="512"></canvas><br/>
+        </div>
+    </body>
+</html>
