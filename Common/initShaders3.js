@@ -14,6 +14,7 @@ function initShaders( gl, vertexShaderId, fragmentShaderId )
     }
     else {
         vertShdr = gl.createShader( gl.VERTEX_SHADER );
+        vertElem.textContent = "#version 300 es" + vertElem.textContent;
         gl.shaderSource( vertShdr, vertElem.textContent.replace(/^\s+|\s+$/g, '' ));
         gl.compileShader( vertShdr );
         if ( !gl.getShaderParameter(vertShdr, gl.COMPILE_STATUS) ) {
@@ -31,6 +32,7 @@ function initShaders( gl, vertexShaderId, fragmentShaderId )
     }
     else {
         fragShdr = gl.createShader( gl.FRAGMENT_SHADER );
+        fragElem.textContent = "#version 300 es" + fragElem.textContent;
         gl.shaderSource( fragShdr, fragElem.textContent.replace(/^\s+|\s+$/g, '' ) );
         gl.compileShader( fragShdr );
         if ( !gl.getShaderParameter(fragShdr, gl.COMPILE_STATUS) ) {
