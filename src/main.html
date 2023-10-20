@@ -30,7 +30,7 @@
 
   void main()
   {
-    float dashed = min(lastDashed, 0.8);
+    float dashed = min(lastDashed/10.0, 1.0);
     fColor = vColor;
     fColor[0] = max(1.0-dashed*distance(head, vColor) + abs(vColor[0]), 0.0);
     fColor[1] = max(1.0-dashed*distance(head, vColor) + abs(vColor[1]), 0.0);
@@ -44,11 +44,13 @@
 <script type="text/javascript" src="snake.js"></script>
 <script type="text/javascript" src="main.js"></script>
 
-<div class="container">
-  <canvas id="gl-canvas" width="800" height="800">
-    Oops ... your browser doesn't support the HTML5 canvas element
-  </canvas>
-  <canvas id="text-canvas" width="800" height="800">
-  </canvas>
-</div>
+<body style="background-color: rgb(50, 50, 50)">
+  <div class="container">
+    <canvas id="gl-canvas" width="800" height="800">
+      Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>
+    <canvas id="text-canvas" width="800" height="800">
+    </canvas>
+  </div>
+</body>
 </html>

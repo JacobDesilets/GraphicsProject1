@@ -9,28 +9,36 @@ var textCanvas;
 var ctx;
 var vBuffer;
 var snake;
-var paused = true;
+var paused = false;
 
-window.onload = function init()
-{
+window.onload = function init() {
   canvas = document.getElementById("gl-canvas");
   textCanvas = document.getElementById("text-canvas");
   ctx = textCanvas.getContext("2d");
-
-  gl = canvas.getContext('webgl2');
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  if (!gl) alert("WebGL 2.0 isn't available");
-  gl.viewport(0, 0, canvas.width, canvas.height);
-
+  gl = setCanvases();
   snake = new Snake(gl);
-  
   clearCanvases();
   eventHandlers();
   update();
 }
 
-function eventHandlers()
-{
+function setCanvases() {
+  var width = Math.min(window.innerWidth, window.innerHeight) - 50;
+  if (canvas.width == width) return;
+  canvas.width  = width;
+  canvas.height = width;
+  textCanvas.width = width;
+  textCanvas.height = width;
+  gl = canvas.getContext('webgl2');
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl = canvas.getContext('webgl2');
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  if (!gl) alert("WebGL 2.0 isn't available");
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  return gl;
+}
+
+function eventHandlers() {
   window.onkeydown = function(event) {
     switch(event.key) {
       case 'w':
@@ -45,14 +53,8 @@ function eventHandlers()
       case 'd':
         snake.changeDirection(1, 0);
         break;
-      case 'q':
-        snake.grow = ! snake.grow;
-        break;
       case ' ':
         snake.dash();
-        break;
-      case 'v':
-        snake.reset();
         break;
       case 'Enter':
         if (snake.dead) {
@@ -61,12 +63,18 @@ function eventHandlers()
           paused = !paused;
         }
         break;
+      // remaining cases are for debug purposes
+      case 'q':
+        snake.grow = ! snake.grow;
+        break;
+      case 'v':
+        snake.reset();
+        break;
     }
   };
 };
 
-function update()
-{
+function update() {
   if (!paused){
     clearCanvases();
     snake.update();
@@ -77,23 +85,28 @@ function update()
   );
 }
 
-function clearCanvases()
-{
+function clearCanvases() {
+  setCanvases();
   gl.clear(gl.COLOR_BUFFER_BIT);
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 }
 
-function renderUI()
-{
+function renderUI() {
   if (snake.dead) {
-    let gameOverText = "you died :(";
-    let gameOverY = 150;
-    ctx.fillStyle = "#000000";
+    let gameOverText = [
+      ["you died :(",     "#FF4444", "100px arial", 150],
+      ["- press enter -", "#FFDDDD", "50px arial",  300]
+    ];
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.font = "100px arial";
-    ctx.fillText(gameOverText, ctx.canvas.width/2, gameOverY);
-    ctx.fillStyle = "#FF4444";
-    ctx.fillText(gameOverText, ctx.canvas.width/2, gameOverY -5);
+    for (let i = 0; i < gameOverText.length; ++i) {
+      let text = gameOverText[i][0];
+      let y = gameOverText[i][3];
+      ctx.font = gameOverText[i][2];
+      ctx.fillStyle = "#000000";
+      ctx.fillText(text, ctx.canvas.width/2, y + 5);
+      ctx.fillStyle = gameOverText[i][1];
+      ctx.fillText(text, ctx.canvas.width/2, y);
+    }
   }
 }

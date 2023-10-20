@@ -1,8 +1,7 @@
-class Snake
-{
+class Snake {
 
   width = 0.05;
-  speed = 4;
+  speed = 4; // snake moves once every [speed] frames
   dash_speed = 5;
 
   constructor(gl) {
@@ -24,8 +23,7 @@ class Snake
     this.dashedUniform = gl.getUniformLocation( program, "lastDashed" );
   }
 
-  reset()
-  {
+  reset() {
     this.dx = 1;
     this.dy = 0;
     this.grow = true;
@@ -33,94 +31,100 @@ class Snake
     this.update_counter = 0.0;
 
     this.vertices = [
-      vec2(0, 0),
-      vec2(0, this.width),
-      vec2(this.width, 0),
-      vec2(this.width, this.width)
+      vec2(-0.5, 0),
+      vec2(-0.5, this.width),
+      vec2(-0.5 + this.width, 0),
+      vec2(-0.5 + this.width, this.width)
     ];
   }
 
-  changeDirection(dx, dy)
-  {
-    if (dx == this.dx || dy == this.dy || this.dead)
-    {
+  changeDirection(dx, dy) {
+    if (dx == this.dx || dy == this.dy || this.dead) {
       return;
     }
-    var old_x1 = this.vertices[this.vertices.length -1][0];
-    var old_y1 = this.vertices[this.vertices.length -1][1];
-    var old_x2 = this.vertices[this.vertices.length -2][0];
-    var old_y2 = this.vertices[this.vertices.length -2][1];
-    var older_x = this.vertices[this.vertices.length -3][0];
-    var older_y = this.vertices[this.vertices.length -3][1];
-    if ((older_x - old_x1) == 0 && Math.abs(older_y - old_y1) == 0)
-    {
+    var old1 = this.getVertex(-1);
+    var old2 = this.getVertex(-2);
+    var older = this.getVertex(-3);
+    // prevent quick X->Y or Y->X input from resulting in death
+    if (older[0] == old1[0] && older[1] == old1[1]) {
       this.move();
-      this.shrink();
+      if (!this.grow) {
+        this.shrink();
+      }
       this.changeDirection(dx, dy);
       return;
     }
-    var new_x1 = dx == 1 ? Math.max(old_x1, old_x2) : Math.min(old_x1, old_x2);
-    var new_y1 = dy == 1 ? Math.max(old_y1, old_y2) : Math.min(old_y1, old_y2);
-    var new_x2 = new_x1 - this.width*this.dx;
-    var new_y2 = new_y1 - this.width*this.dy;
-
+    var new1 = vec2(
+      dx == 1 ? Math.max(old1[0], old2[0]) : Math.min(old1[0], old2[0]),
+      dy == 1 ? Math.max(old1[1], old2[1]) : Math.min(old1[1], old2[1])
+    );
+    var new2 = vec2(
+      new1[0] - this.width*this.dx,
+      new1[1] - this.width*this.dy
+    );
     this.dx = dx;
     this.dy = dy;
     for (let i = 0; i < 2; ++i) {
-      this.vertices.push(vec2(new_x1, new_y1));
-      this.vertices.push(vec2(new_x2, new_y2));
+      this.vertices.push(vec2(new1[0], new1[1]));
+      this.vertices.push(vec2(new2[0], new2[1]));
     }
   }
 
-  die()
-  {
-    console.log("DEATH");
+  die() {
     this.dead = true;
   }
 
-  move()
-  {
-    if (this.dead) {
-      return;
+  moveVertex(index, d) {
+    index += index < 0 ? this.vertices.length : 0;
+    for (let i = 0; i < 2; ++i) {
+      this.vertices[index][i] =
+        this.vertices[index][i] + d[i] * this.width;
     }
-    this.vertices[this.vertices.length - 1][1] += this.dy * this.width;
-    this.vertices[this.vertices.length - 1][0] += this.dx * this.width;
-    this.vertices[this.vertices.length - 2][1] += this.dy * this.width;
-    this.vertices[this.vertices.length - 2][0] += this.dx * this.width;
+  }
+
+  getVertex(index) {
+    index += index < 0 ? this.vertices.length : 0;
+    return this.vertices[index];
+  }
+
+  move() {
+    if (this.dead) return;
+    this.moveVertex(-1, vec2(this.dx, this.dy));
+    this.moveVertex(-2, vec2(this.dx, this.dy));
     if (!this.grow) {
       this.shrink();
     }
+    this.collide();
+  }
+
+  collide() {
+    // calculate point in the center of the snakes head for collisions
+    var head = vec2(
+      (this.getVertex(-1)[0] + this.getVertex(-2)[0] - this.dx*this.width)/2.0,
+      (this.getVertex(-1)[1] + this.getVertex(-2)[1] - this.dy*this.width)/2.0
+    );
+    // collide with self
     for (let i = 0; i < this.vertices.length - 4; i+= 4) {
       var rect = this.vertices.slice(i, i+4);
-      var point = vec2(
-        ((this.vertices[this.vertices.length -1][0] +
-         this.vertices[this.vertices.length -1][0])/2.0),
-        (this.vertices[this.vertices.length -2][1] +
-         this.vertices[this.vertices.length -2][1])/2.0);
-
-      if (pointInRect(point, rect)) {
+      if (pointInRect(head, rect)) {
         this.die();
       }
     }
-    if (this.vertices[this.vertices.length -1][0] < -1 ||
-        this.vertices[this.vertices.length -1][0] > 1 ||
-        this.vertices[this.vertices.length -1][1] < -1 ||
-        this.vertices[this.vertices.length -1][1] > 1) {
+    // collide with walls
+    if (head[0] < -1 || head[0] > 1 || head[1] < -1 || head[1] > 1) {
       this.die();
     }
-        
   }
 
-  dash()
-  {
+  dash() {
+    if (this.dead) return;
     for (let i = 0; i < this.dash_speed; ++i) {
       this.move();
     }
     this.last_dashed = 0;
   }
 
-  shrink()
-  {
+  shrink() {
     var sx = sign(this.vertices[0][0] - this.vertices[2][0]);
     var sy = sign(this.vertices[0][1] - this.vertices[2][1]);
     if (sx == 0 && sy == 0) {
@@ -129,33 +133,25 @@ class Snake
       this.shrink();
     }
     else {
-      this.vertices[0][1] -= sy * this.width;
-      this.vertices[0][0] -= sx * this.width;
-      this.vertices[1][1] -= sy * this.width;
-      this.vertices[1][0] -= sx * this.width;
+      this.moveVertex(0, vec2(-sx, -sy));
+      this.moveVertex(1, vec2(-sx, -sy));
     }
   }
 
-  update()
-  {
+  update() {
     this.update_counter += 1;
-    this.last_dashed += 0.1;
-    if (this.update_counter % this.speed == 0)
-    {
+    this.last_dashed += 1;
+    if (this.update_counter % this.speed == 0) {
       this.move();
     }
     this.render();
   }
 
-  render()
-  {
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vBuffer);
+  render() {
     var head = [
-      this.vertices[this.vertices.length -1][0],
-      this.vertices[this.vertices.length -1][1],
-      1.0,
-      1.0
+      this.getVertex(-1)[0], this.getVertex(-1)[1], 1.0, 1.0
     ];
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vBuffer);
     this.gl.uniform4fv(this.headUniform, head);
     this.gl.uniform1f(this.dashedUniform, this.last_dashed);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, flatten(this.vertices), this.gl.DYNAMIC_DRAW);
