@@ -26,7 +26,7 @@ class Snake {
   reset() {
     this.dx = 1;
     this.dy = 0;
-    this.grow = true;
+    this.grow = false;
     this.dead = false;
     this.update_counter = 0.0;
 
@@ -48,9 +48,6 @@ class Snake {
     // prevent quick X->Y or Y->X input from resulting in death
     if (older[0] == old1[0] && older[1] == old1[1]) {
       this.move();
-      if (!this.grow) {
-        this.shrink();
-      }
       this.changeDirection(dx, dy);
       return;
     }
@@ -128,6 +125,8 @@ class Snake {
     var sx = sign(this.vertices[0][0] - this.vertices[2][0]);
     var sy = sign(this.vertices[0][1] - this.vertices[2][1]);
     if (sx == 0 && sy == 0) {
+      this.vertices.shift();
+      this.vertices.shift();
       this.vertices.shift();
       this.vertices.shift();
       this.shrink();
