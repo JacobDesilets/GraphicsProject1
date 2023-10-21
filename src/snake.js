@@ -26,9 +26,12 @@ class Snake {
   reset() {
     this.dx = 1;
     this.dy = 0;
-    this.grow = true;
+    this.grow = false;
     this.dead = false;
     this.update_counter = 0.0;
+
+    this.segments = [vec2(0, 0)];
+    this.currentPos = vec2(0, 0);
 
     this.vertices = [
       vec2(-0.5, 0),
@@ -38,36 +41,50 @@ class Snake {
     ];
   }
 
+  // changeDirection(dx, dy) {
+  //   if (dx == this.dx || dy == this.dy || this.dead) {
+  //     return;
+  //   }
+
+  //   var old1 = this.getVertex(-1);
+  //   var old2 = this.getVertex(-2);
+  //   var older = this.getVertex(-3);
+
+  //   //prevent quick X->Y or Y->X input from resulting in death
+  //   if (older[0] == old1[0] && older[1] == old1[1]) {
+  //     console.log("Here!");
+  //     this.move();
+  //     if (!this.grow) {
+  //       this.shrink();
+  //     }
+  //     this.changeDirection(dx, dy);
+  //     return;
+  //   }
+
+  //   var new1 = vec2(
+  //     dx == 1 ? Math.max(old1[0], old2[0]) : Math.min(old1[0], old2[0]),
+  //     dy == 1 ? Math.max(old1[1], old2[1]) : Math.min(old1[1], old2[1])
+  //   );
+
+  //   var new2 = vec2(
+  //     new1[0] - this.width*this.dx,
+  //     new1[1] - this.width*this.dy
+  //   );
+
+  //   this.dx = dx;
+  //   this.dy = dy;
+  //   for (let i = 0; i < 2; ++i) {
+  //     this.vertices.push(vec2(new1[0], new1[1]));
+  //     this.vertices.push(vec2(new2[0], new2[1]));
+  //   }
+  // }
+
   changeDirection(dx, dy) {
     if (dx == this.dx || dy == this.dy || this.dead) {
       return;
     }
-    var old1 = this.getVertex(-1);
-    var old2 = this.getVertex(-2);
-    var older = this.getVertex(-3);
-    // prevent quick X->Y or Y->X input from resulting in death
-    if (older[0] == old1[0] && older[1] == old1[1]) {
-      this.move();
-      if (!this.grow) {
-        this.shrink();
-      }
-      this.changeDirection(dx, dy);
-      return;
-    }
-    var new1 = vec2(
-      dx == 1 ? Math.max(old1[0], old2[0]) : Math.min(old1[0], old2[0]),
-      dy == 1 ? Math.max(old1[1], old2[1]) : Math.min(old1[1], old2[1])
-    );
-    var new2 = vec2(
-      new1[0] - this.width*this.dx,
-      new1[1] - this.width*this.dy
-    );
     this.dx = dx;
     this.dy = dy;
-    for (let i = 0; i < 2; ++i) {
-      this.vertices.push(vec2(new1[0], new1[1]));
-      this.vertices.push(vec2(new2[0], new2[1]));
-    }
   }
 
   die() {
@@ -87,14 +104,21 @@ class Snake {
     return this.vertices[index];
   }
 
+  // move() {
+  //   if (this.dead) return;
+  //   this.moveVertex(-1, vec2(this.dx, this.dy));
+  //   this.moveVertex(-2, vec2(this.dx, this.dy));
+  //   if (!this.grow) {
+  //     this.shrink();
+  //   }
+  //   this.collide();
+  // }
+
   move() {
-    if (this.dead) return;
-    this.moveVertex(-1, vec2(this.dx, this.dy));
-    this.moveVertex(-2, vec2(this.dx, this.dy));
-    if (!this.grow) {
-      this.shrink();
-    }
-    this.collide();
+    if(this.dead) return;
+    this.currentPos.x = this.currentPos.x + (this.dx * this.width);
+    this.currentPos.y = this.currentPos.y + (this.dy * this.width);
+    this.segments.push(this.currentPos);
   }
 
   collide() {
@@ -138,6 +162,13 @@ class Snake {
     }
   }
 
+  // shrink() {
+  //   var sx = sign(this.vertices[0][0] - this.vertices[2][0]);
+  //   var sy = sign(this.vertices[0][1] - this.vertices[2][1]);
+  //   this.moveVertex(0, vec2(this.dx, this.dy));
+  //   this.moveVertex(1, vec2(this.dx, this.dy));
+  // }
+
   update() {
     this.update_counter += 1;
     this.last_dashed += 1;
@@ -155,6 +186,6 @@ class Snake {
     this.gl.uniform4fv(this.headUniform, head);
     this.gl.uniform1f(this.dashedUniform, this.last_dashed);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, flatten(this.vertices), this.gl.DYNAMIC_DRAW);
-    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, this.vertices.length);
+    this.gl.drawArrays(this.gl.LINE_STRIP, 0, this.vertices.length);
   }
 }
