@@ -57,7 +57,7 @@
     vec3 pos = (Mt * Mr * Ms * vec3(aPosition.x, aPosition.y, 1.0));
 
     gl_Position = vec4(pos, 1.0);
-    vColor = vec4(gl_Position.x, gl_Position.y, 1.0, 1.0);
+    vColor = vec4(gl_Position.x, gl_Position.y, 1.0 * Ms[0][0], 1.0);
   }
 </script>
 

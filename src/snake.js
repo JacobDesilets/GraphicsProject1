@@ -152,6 +152,9 @@ class Snake {
     this.last_dashed += 1;
     if (this.update_counter % this.speed == 0) {
       this.move();
+      if(this.grow) {
+        this.grow = false;
+      }
     }
     this.render();
   }

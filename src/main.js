@@ -60,7 +60,7 @@ function eventHandlers() {
         snake.dash();
         break;
       case 'Enter':
-        if (snake.dead) {
+        if (snake.dead || fm.won) {
           snake.reset();
           fm.reset();
         } else {
@@ -83,9 +83,11 @@ function update() {
   if (!paused){
     clearCanvases();
     snake.update();
-    fm.collide(snake.getHeadPos()[0], snake.getHeadPos()[1]);
+    fm.collide(snake.getHeadPos()[0], snake.getHeadPos()[1], function(){ snake.grow = true; });
     fm.update();
     renderUI();
+
+    if(fm.won) {snake.die()}
   }
   setTimeout(
     function (){requestAnimationFrame(update);}, delay
@@ -99,14 +101,34 @@ function clearCanvases() {
 }
 
 function renderUI() {
-  if (snake.dead) {
-    let gameOverText = [
-      ["you died :(",        "#FF4444", "100px arial", 150],
-      [`Score: ${fm.score}`, "#FF4444", "100px arial", 300],
-      ["- press enter -",    "#FFDDDD", "50px arial",  500]
-    ];
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+  let scoreText = [`Score: ${fm.score} / ${fm.SCORE_LIMIT}`, "#d5f0d1", "30px arial", 30];
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  let text = scoreText[0];
+  let y = scoreText[3];
+  ctx.font = scoreText[2];
+  ctx.fillStyle = "#000000";
+  ctx.fillText(text, ctx.canvas.width/2, y + 5);
+  ctx.fillStyle = scoreText[1];
+  ctx.fillText(text, ctx.canvas.width/2, y);
+
+  if (snake.dead || fm.won) {
+    let gameOverText; 
+    
+    if(snake.dead && !fm.won) {
+      gameOverText = [
+        ["you died :(",        "#FF4444", "100px arial", 150],
+        ["- press enter -",    "#FFDDDD", "50px arial",  300]
+      ];
+    } else {
+      gameOverText = [
+        ["you won! :)",        "#5bcc47", "100px arial", 150],
+        ["- press enter -",    "#FFDDDD", "50px arial",  300]
+      ];
+    }
+    
+
     for (let i = 0; i < gameOverText.length; ++i) {
       let text = gameOverText[i][0];
       let y = gameOverText[i][3];
