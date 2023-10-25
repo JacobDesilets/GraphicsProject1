@@ -8,19 +8,21 @@ class Snake {
     this.gl = gl;
     this.reset();
 
+    this.program = initShaders(gl, "snake-vertex", "snake-fragment");
+    gl.useProgram(this.program);
+
     this.vBuffer = this.gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(this.vertices), gl.DYNAMIC_DRAW);
 
-    var program = initShaders(gl, "snake-vertex", "snake-fragment");
-    gl.useProgram(program);
+    
 
-    var positionLoc = this.gl.getAttribLocation( program, "aPosition");
-    this.gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
-    this.gl.enableVertexAttribArray(positionLoc);
+    this.positionLoc = this.gl.getAttribLocation( this.program, "aPosition");
+    this.gl.vertexAttribPointer(this.positionLoc, 2, gl.FLOAT, false, 0, 0);
+    this.gl.enableVertexAttribArray(this.positionLoc);
 
-    this.headUniform = gl.getUniformLocation( program, "head" );
-    this.dashedUniform = gl.getUniformLocation( program, "lastDashed" );
+    this.headUniform = gl.getUniformLocation( this.program, "head" );
+    this.dashedUniform = gl.getUniformLocation( this.program, "lastDashed" );
   }
 
   reset() {
@@ -113,6 +115,14 @@ class Snake {
     }
   }
 
+  getHeadPos() {
+    var head = vec2(
+      (this.getVertex(-1)[0] + this.getVertex(-2)[0] - this.dx*this.width)/2.0,
+      (this.getVertex(-1)[1] + this.getVertex(-2)[1] - this.dy*this.width)/2.0
+    );
+    return head;
+  }
+
   dash() {
     if (this.dead) return;
     for (let i = 0; i < this.dash_speed; ++i) {
@@ -147,10 +157,13 @@ class Snake {
   }
 
   render() {
+    gl.useProgram(this.program);
     var head = [
       this.getVertex(-1)[0], this.getVertex(-1)[1], 1.0, 1.0
     ];
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vBuffer);
+    this.gl.vertexAttribPointer(this.positionLoc, 2, gl.FLOAT, false, 0, 0);
+    this.gl.enableVertexAttribArray(this.positionLoc);
     this.gl.uniform4fv(this.headUniform, head);
     this.gl.uniform1f(this.dashedUniform, this.last_dashed);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, flatten(this.vertices), this.gl.DYNAMIC_DRAW);

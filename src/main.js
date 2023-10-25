@@ -11,12 +11,15 @@ var vBuffer;
 var snake;
 var paused = false;
 
+let fm;
+
 window.onload = function init() {
   canvas = document.getElementById("gl-canvas");
   textCanvas = document.getElementById("text-canvas");
   ctx = textCanvas.getContext("2d");
   gl = setCanvases();
   snake = new Snake(gl);
+  fm = new FoodManager(gl);
   clearCanvases();
   eventHandlers();
   update();
@@ -59,6 +62,7 @@ function eventHandlers() {
       case 'Enter':
         if (snake.dead) {
           snake.reset();
+          fm.reset();
         } else {
           paused = !paused;
         }
@@ -69,6 +73,7 @@ function eventHandlers() {
         break;
       case 'v':
         snake.reset();
+        fm.reset();
         break;
     }
   };
@@ -78,6 +83,8 @@ function update() {
   if (!paused){
     clearCanvases();
     snake.update();
+    fm.collide(snake.getHeadPos()[0], snake.getHeadPos()[1]);
+    fm.update();
     renderUI();
   }
   setTimeout(
@@ -94,8 +101,9 @@ function clearCanvases() {
 function renderUI() {
   if (snake.dead) {
     let gameOverText = [
-      ["you died :(",     "#FF4444", "100px arial", 150],
-      ["- press enter -", "#FFDDDD", "50px arial",  300]
+      ["you died :(",        "#FF4444", "100px arial", 150],
+      [`Score: ${fm.score}`, "#FF4444", "100px arial", 300],
+      ["- press enter -",    "#FFDDDD", "50px arial",  500]
     ];
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
