@@ -6,37 +6,51 @@
 
 <title>Snake Graphics</title>
 
-
 <!-- Snake shader -->
 <script id="snake-vertex" type="x-shader/x-vertex">
   #version 300 es
+  precision mediump float;
 
   in vec4 aPosition;
+  uniform float uTheta;
+  uniform vec2 head;
   out vec4 vColor;
+  out vec4 head_r;
+
+  vec4 get_rotated(vec4 point, float theta) {
+    float s = sin(theta);
+    float c = cos(theta);
+    float x = -s*point.y + c*point.x;
+    float y = s*point.x + c*point.y;
+    return vec4(x, y, 1.0, 1.0);
+  }
 
   void main()
   {
-    gl_Position = aPosition;
+    gl_Position = get_rotated(aPosition, uTheta);
+    head_r = get_rotated(vec4(head.x, head.y, 1.0, 1.0), uTheta);
     vColor = vec4(gl_Position.x, gl_Position.y, 1.0, 1.0);
   }
 </script>
 
 <script id="snake-fragment" type="x-shader/x-fragment">
   #version 300 es
-
   precision mediump float;
-  out vec4 fColor;
+
   in vec4 vColor;
+  in vec4 head_r;
   uniform float lastDashed;
-  uniform vec4 head;
+  out vec4 fColor;
 
   void main()
   {
     float dashed = min(lastDashed/10.0, 1.0);
-    fColor = vColor;
-    fColor[0] = max(1.0-dashed*distance(head, vColor) + abs(vColor[0]), 0.0);
-    fColor[1] = max(1.0-dashed*distance(head, vColor) + abs(vColor[1]), 0.0);
-    fColor[2] = max(1.0-dashed*distance(head, vColor), 0.0);
+    fColor = vec4(
+      1.0-dashed*distance(head_r, vColor) + abs(vColor[0]),
+      1.0-dashed*distance(head_r, vColor) + abs(vColor[1]),
+      1.0-dashed*distance(head_r, vColor),
+      1.0
+    );
   }
 </script>
 
@@ -44,12 +58,12 @@
 <!-- Food shader -->
 <script id="food-vertex" type="x-shader/x-vertex">
   #version 300 es
+  precision mediump float;
 
   in vec4 aPosition;
   uniform mat3 Mr;
   uniform mat3 Ms;
   uniform mat3 Mt;
-  
   out vec4 vColor;
 
   void main()
@@ -63,17 +77,20 @@
 
 <script id="food-fragment" type="x-shader/x-fragment">
   #version 300 es
-
   precision mediump float;
 
-  uniform float opacity;
-
-  out vec4 fColor;
   in vec4 vColor;
+  uniform float opacity;
+  uniform float theta;
+  out vec4 fColor;
 
   void main()
   {
-    fColor = vec4(vColor[0], vColor[1], vColor[2], opacity);
+    fColor = vec4(
+      max(abs(vColor[0]) + theta, 0.2),
+      max(abs(vColor[1]) + theta, 0.2),
+      max(abs(theta), 0.5),
+      opacity);
   }
 </script>
 
@@ -84,13 +101,14 @@
 <script type="text/javascript" src="food.js"></script>
 <script type="text/javascript" src="main.js"></script>
 
-<body style="background-color: rgb(50, 50, 50)">
+<body class="main">
   <div class="container">
     <canvas id="gl-canvas" width="800" height="800">
       Oops ... your browser doesn't support the HTML5 canvas element
     </canvas>
     <canvas id="text-canvas" width="800" height="800">
     </canvas>
+    WASD: Turn / Space: Dash / Enter: Pause
   </div>
 </body>
 </html>

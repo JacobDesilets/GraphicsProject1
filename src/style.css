@@ -1,13 +1,19 @@
-  .container {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-  }
-   
-  #text-canvas {
-      position: absolute;
-      left: 0px;
-      top: 0px;
-      z-index: 10;
-  }
+.main {
+  background-color: rgb(50, 50, 50);
+  color: white;
+}
+
+.container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+ 
+#text-canvas {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: 10;
+}
+

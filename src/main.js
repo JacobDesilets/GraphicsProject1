@@ -9,17 +9,16 @@ var textCanvas;
 var ctx;
 var vBuffer;
 var snake;
+var fm;
 var paused = false;
-
-let fm;
 
 window.onload = function init() {
   canvas = document.getElementById("gl-canvas");
   textCanvas = document.getElementById("text-canvas");
   ctx = textCanvas.getContext("2d");
   gl = setCanvases();
-  snake = new Snake(gl);
   fm = new FoodManager(gl);
+  snake = new Snake(gl, fm);
   clearCanvases();
   eventHandlers();
   update();
@@ -68,9 +67,6 @@ function eventHandlers() {
         }
         break;
       // remaining cases are for debug purposes
-      case 'q':
-        snake.grow = ! snake.grow;
-        break;
       case 'v':
         snake.reset();
         fm.reset();
@@ -83,12 +79,10 @@ function update() {
   if (!paused){
     clearCanvases();
     snake.update();
-    fm.collide(snake.getHeadPos()[0], snake.getHeadPos()[1], function(){ snake.grow = true; });
     fm.update();
-    renderUI();
-
     if(fm.won) {snake.die()}
   }
+  renderUI();
   setTimeout(
     function (){requestAnimationFrame(update);}, delay
   );
@@ -101,42 +95,29 @@ function clearCanvases() {
 }
 
 function renderUI() {
-  let scoreText = [`Score: ${fm.score} / ${fm.SCORE_LIMIT}`, "#d5f0d1", "30px arial", 30];
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-
-  let text = scoreText[0];
-  let y = scoreText[3];
-  ctx.font = scoreText[2];
-  ctx.fillStyle = "#000000";
-  ctx.fillText(text, ctx.canvas.width/2, y + 5);
-  ctx.fillStyle = scoreText[1];
-  ctx.fillText(text, ctx.canvas.width/2, y);
-
-  if (snake.dead || fm.won) {
-    let gameOverText; 
-    
-    if(snake.dead && !fm.won) {
-      gameOverText = [
-        ["you died :(",        "#FF4444", "100px arial", 150],
-        ["- press enter -",    "#FFDDDD", "50px arial",  300]
-      ];
+  let uiText = [[`Score: ${fm.score} / ${fm.SCORE_LIMIT}`, "#d5f0d1", "30px arial", 30]];
+  let enterText = ["- press enter -", "#ffdddd", "50px arial",  300];
+  if (snake.dead) {
+    if (fm.won) {
+      uiText.push(["you won! :)", "#5bcc47", "100px arial", 150]);
     } else {
-      gameOverText = [
-        ["you won! :)",        "#5bcc47", "100px arial", 150],
-        ["- press enter -",    "#FFDDDD", "50px arial",  300]
-      ];
+      uiText.push(["you died :(", "#ff4444", "100px arial", 150]);
     }
-    
-
-    for (let i = 0; i < gameOverText.length; ++i) {
-      let text = gameOverText[i][0];
-      let y = gameOverText[i][3];
-      ctx.font = gameOverText[i][2];
-      ctx.fillStyle = "#000000";
-      ctx.fillText(text, ctx.canvas.width/2, y + 5);
-      ctx.fillStyle = gameOverText[i][1];
-      ctx.fillText(text, ctx.canvas.width/2, y);
-    }
+    uiText.push(enterText);
+  }
+  if (paused) {
+    uiText.push(["paused", "#ccffee", "75px arial", 175]);
+    uiText.push(enterText);
+  }
+  for (let i = 0; i < uiText.length; ++i) {
+    let text = uiText[i][0];
+    let y = uiText[i][3];
+    ctx.font = uiText[i][2];
+    ctx.fillStyle = "#000000";
+    ctx.fillText(text, ctx.canvas.width/2, y + 5);
+    ctx.fillStyle = uiText[i][1];
+    ctx.fillText(text, ctx.canvas.width/2, y);
   }
 }
